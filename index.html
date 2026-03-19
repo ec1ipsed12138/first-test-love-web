@@ -581,11 +581,11 @@ body{overflow-x:hidden;background:#fdfbfb;}
 
 <!-- Firebase 配置和初始化 -->
 <script type="module">
-  // 引入 Firebase 核心和 Firestore 模块（删除了 analytics 导入）
+  // 引入 Firebase 核心和 Firestore 模块
   import { initializeApp } from "https://cdn.jsdelivr.net/npm/firebase-app@12.10.0/dist/firebase-app.esm.js";
   import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, query } from "https://cdn.jsdelivr.net/npm/firebase-firestore@12.10.0/dist/firebase-firestore.esm.js";
 
-  // Firebase 配置（完全保留，无修改）
+  // Firebase 配置
   const firebaseConfig = {
     apiKey: "AIzaSyDjfZMxHXyfyNDaKg_2zs9IMsZbA7qE21w",
     authDomain: "test-6f1e7.firebaseapp.com",
@@ -596,12 +596,19 @@ body{overflow-x:hidden;background:#fdfbfb;}
     measurementId: "G-YVE9E65GD1"
   };
 
-  // 初始化 Firebase（删除了 analytics 初始化）
+  // 初始化 Firebase 并挂载到 window 全局
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-
-  // 以下你的留言相关业务逻辑完全保留，无任何修改
-  // ...（你原来的添加/查询/删除留言代码）
+  
+  // 将 Firebase 方法挂载到 window，让全局代码能访问
+  window.firebaseDb = db;
+  window.firebaseCollection = collection;
+  window.firebaseAddDoc = addDoc;
+  window.firebaseGetDocs = getDocs;
+  window.firebaseDeleteDoc = deleteDoc;
+  window.firebaseDoc = doc;
+  window.firebaseQuery = query;
+  window.firebaseOrderBy = orderBy;
 </script>
 
 
