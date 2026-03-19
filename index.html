@@ -70,7 +70,7 @@ body{overflow-x:hidden;background:#fdfbfb;}
   .page-grid{
     display:grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 500px 300px; /* 纪念日行拉高，装饰区行压缩一半 */
+    grid-template-rows: 550px 300px; /* 纪念日行再拉高50px补充空隙 */
     gap:20px;
     max-width:1200px;
     margin:0 auto;
@@ -102,7 +102,7 @@ body{overflow-x:hidden;background:#fdfbfb;}
   border:1px solid #f8e1e3;
   display:flex;
   flex-direction:column;
-  min-height:500px; /* 电脑端拉长到500px */
+  min-height:550px; /* 电脑端再拉高50px补充删除按钮的空隙 */
 }
 .title{
   color:#e63946;
@@ -128,23 +128,11 @@ input{
   border-radius:8px;
   font-size:13px;
 }
-.btn-save{
-  width:100%;
-  padding:9px;
-  background:#e63946;
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  font-size:15px;
-  cursor:pointer;
-  margin-top:8px;
-}
-.btn-save:hover{background:#d62828}
 .date-display{
   margin-top:12px;
   flex:1;
   overflow-y:auto;
-  max-height:280px; /* 增加最大高度，显示更多内容 */
+  max-height:320px; /* 增加最大高度，显示更多内容 */
   padding-right:4px;
 }
 .date-card-item{
@@ -397,8 +385,8 @@ input{
 /* 手机端适配：保持比例 */
 @media (max-width:768px){
   .grid-card{min-height:350px;}
-  .date-card{min-height:450px;} /* 手机端纪念日也拉长 */
-  .date-display{max-height:220px;}
+  .date-card{min-height:500px;} /* 手机端纪念日也拉长 */
+  .date-display{max-height:280px;}
   .decor-card{min-height:200px;} /* 手机端装饰区也压缩 */
   .bgm-control{bottom:10px;right:10px;}
   .welcome-title{letter-spacing:4px;}
@@ -431,10 +419,9 @@ input{
     <!-- 上排左：纪念日（拉长） -->
     <div class="grid-card date-card">
       <h3 class="title">❤️ 我们的纪念日 ❤️</h3>
-      <div class="input-item"><label for="loveDate">相恋日期</label><input type="date" id="loveDate"></div>
-      <div class="input-item"><label for="licenseDate">领证日期</label><input type="date" id="licenseDate"></div>
-      <div class="input-item"><label for="marryDate">结婚日期</label><input type="date" id="marryDate"></div>
-      <button class="btn-save" onclick="saveDates()">保存纪念日</button>
+      <div class="input-item"><label for="loveDate">相恋日期</label><input type="date" id="loveDate" value="2017-06-08"></div>
+      <div class="input-item"><label for="licenseDate">领证日期</label><input type="date" id="licenseDate" value="2025-08-15"></div>
+      <div class="input-item"><label for="marryDate">结婚日期</label><input type="date" id="marryDate" value="2025-10-28"></div>
       <div class="date-display" id="dateDisplay"></div>
       <div class="countdown" id="countdownCard" style="display:none">
         <h4>距离下一个结婚纪念日</h4>
@@ -523,7 +510,7 @@ function enterMainPage() {
   document.getElementById("mainPage").style.display = "block";
   
   loadPhotosTwoAtOnce();
-  loadSavedDates(); // 页面打开就加载保存的纪念日
+  loadFixedDates(); // 加载固定的纪念日
   loadSavedWords();
   
   randomFirstSong();
@@ -591,29 +578,17 @@ function loadPhotosTwoAtOnce() {
   }, 4000);
 }
 
-function saveDates() {
-  const loveDate = document.getElementById("loveDate").value;
-  const licenseDate = document.getElementById("licenseDate").value;
-  const marryDate = document.getElementById("marryDate").value;
+// 修改为加载固定日期，不再从本地存储读取
+function loadFixedDates() {
+  // 固定的纪念日日期
+  const loveDate = "2017-06-08";
+  const licenseDate = "2025-08-15";
+  const marryDate = "2025-10-28";
   
-  // 保存到本地存储，永久生效
-  if(loveDate) localStorage.setItem("loveDate", loveDate);
-  if(licenseDate) localStorage.setItem("licenseDate", licenseDate);
-  if(marryDate) localStorage.setItem("marryDate", marryDate);
-  
-  loadSavedDates();
-  alert("纪念日保存成功❤️，下次打开不用再输入啦～");
-}
-
-function loadSavedDates() {
-  // 读取本地存储的日期，自动回填到输入框
-  const loveDate = localStorage.getItem("loveDate");
-  const licenseDate = localStorage.getItem("licenseDate");
-  const marryDate = localStorage.getItem("marryDate");
-  
-  if(loveDate) document.getElementById("loveDate").value = loveDate;
-  if(licenseDate) document.getElementById("licenseDate").value = licenseDate;
-  if(marryDate) document.getElementById("marryDate").value = marryDate;
+  // 回填到输入框
+  document.getElementById("loveDate").value = loveDate;
+  document.getElementById("licenseDate").value = licenseDate;
+  document.getElementById("marryDate").value = marryDate;
   
   // 计算已共度天数
   function calcDays(dateStr) {
@@ -701,9 +676,9 @@ function clearWords() {
   }
 }
 
-// 页面加载完成后，预加载保存的纪念日（防止刷新后丢失）
+// 页面加载完成后，加载固定纪念日
 window.onload = function() {
-  loadSavedDates();
+  loadFixedDates();
   loadSavedWords();
 };
 </script>
