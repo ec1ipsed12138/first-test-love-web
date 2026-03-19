@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>小郭和小朱的世界</title>
+<style>
+/* 全局重置 */
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei", "STKaiti", "KaiTi", sans-serif;}
+body{overflow-x:hidden;background:#fdfbfb;}
+
+/* 欢迎页 - 双端适配 */
+.welcome-page{
+  width:100vw;
+  height:100vh;
+  background: linear-gradient(135deg, #ffeff8 0%, #e8f4ff 100%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  position:fixed;
+  top:0;
+  left:0;
+  z-index:9999;
+  padding:0 20px;
+}
+.welcome-title{
+  font-size: clamp(24px, 4vw, 48px);
+  color: rgb(51,255,255);
+  text-align:center;
+  margin-bottom:40px;
+  letter-spacing:8px;
+  font-weight:bold;
+}
+.enter-btn{
+  padding: clamp(12px, 2vw, 18px) clamp(30px, 5vw, 60px);
+  background: linear-gradient(90deg, #ff69b4 0%, #87cefa 100%);
+  border:none;
+  border-radius: 50px;
+  color:white;
+  font-size: clamp(16px, 2vw, 24px);
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow: 0 8px 15px rgba(255,105,180,0.3);
+  transition: all 0.3s ease;
+}
+.enter-btn:hover{
+  transform: translateY(-5px);
+  box-shadow: 0 12px 20px rgba(255,105,180,0.4);
+}
+
+/* 装饰漂浮元素 */
+.decoration{position:absolute;opacity:0.7;}
+.star{font-size:20px;color:#ffd700;animation: float 3s ease-in-out infinite;}
+.heart{font-size:18px;color:#ff69b4;animation: float 4s ease-in-out infinite;}
+@keyframes float {
+  0% {transform: translateY(0);}
+  50% {transform: translateY(-20px);}
+  100% {transform: translateY(0);}
+}
+
+/* 主页面 - 电脑端 2+2 排版 */
+.main-page{
+  display:none;
+  min-height:100vh;
+  padding:20px;
+  background:linear-gradient(120deg,#fdfbfb 0%,#ebedee 100%);
+}
+@media (min-width:769px) {
+  .page-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 420px 420px;
+    gap:20px;
+    max-width:1200px;
+    margin:0 auto;
+  }
+}
+@media (max-width:768px) {
+  .page-grid{
+    display:grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    gap:15px;
+  }
+}
+
+/* 卡片通用样式 */
+.grid-card{
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 4px 12px rgba(222,184,135,.12);
+  background:#fff;
+  overflow:hidden;
+  position:relative;
+  min-height:380px;
+}
+
+/* 纪念日卡片 */
+.date-card{
+  background:#faf6f6;
+  border:1px solid #f8e1e3;
+  display:flex;
+  flex-direction:column;
+}
+.title{
+  color:#e63946;
+  text-align:center;
+  margin-bottom:12px;
+  font-size:17px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+.input-item{margin-bottom:8px}
+label{
+  display:block;
+  margin-bottom:4px;
+  color:#6d6875;
+  font-size:13px;
+}
+input{
+  width:100%;
+  padding:9px;
+  border:1px solid #ddd;
+  border-radius:8px;
+  font-size:13px;
+}
+.btn-save{
+  width:100%;
+  padding:9px;
+  background:#e63946;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  font-size:15px;
+  cursor:pointer;
+  margin-top:8px;
+}
+.btn-save:hover{background:#d62828}
+.date-display{
+  margin-top:12px;
+  flex:1;
+  overflow-y:auto;
+}
+.date-card-item{
+  padding:9px;
+  border-radius:8px;
+  background:#fff0f3;
+  margin-bottom:6px;
+}
+.date-card-item h4{
+  color:#e63946;
+  font-size:14px;
+  margin-bottom:4px;
+}
+.date-card-item p{
+  font-size:12px;
+  color:#555;
+}
+.countdown{
+  padding:9px;
+  border-radius:8px;
+  background:#ffccd5;
+  margin-top:8px;
+  text-align:center;
+}
+.countdown h4{
+  color:#d62828;
+  margin-bottom:4px;
+  font-size:13px;
+}
+.countdown-text{
+  font-size:15px;
+  font-weight:700;
+  color:#d62828;
+}
+
+/* 照片区卡片 */
+.photo-card{
+  background:#fff9f9;
+  display:flex;
+  flex-direction:column;
+}
+.photo-title{
+  color:#e63946;
+  text-align:center;
+  margin-bottom:10px;
+  font-size:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+.photo-show{
+  flex:1;
+  width:100%;
+  position:relative;
+  border-radius:8px;
+  overflow:hidden;
+  background:#f9f9f9;
+  min-height:280px;
+}
+.photo-slide{
+  position:absolute;
+  inset:0;
+  display:flex;
+  gap:6px;
+  padding:6px;
+  opacity:0;
+  transition:opacity 0.8s ease;
+}
+.photo-slide.active{opacity:1}
+.photo-item{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.photo-item img{
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  border-radius:6px;
+}
+
+/* 装饰区卡片 - 适配5个装饰的散列布局 */
+.decor-card{
+  background:#fff9f9;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:20px 10px;
+}
+.decor-title{
+  color:#e63946;
+  margin-bottom:15px;
+  font-size:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+/* 散列布局容器 */
+.decor-area{
+  flex:1;
+  width:100%;
+  height:100%;
+  position:relative;
+  max-width:500px;
+}
+/* 装饰图片 - 缩小尺寸+5个散列分布 */
+.decor-item{
+  position:absolute;
+  object-fit:contain;
+  cursor:pointer;
+  transition: all 0.3s ease;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+/* 第1个：左上 */
+.decor-item:nth-child(1){
+  width: 70px;
+  height: 70px;
+  top: 8%;
+  left: 8%;
+  transform: rotate(-6deg);
+}
+/* 第2个：右上 */
+.decor-item:nth-child(2){
+  width: 65px;
+  height: 65px;
+  top: 12%;
+  right: 10%;
+  transform: rotate(5deg);
+}
+/* 第3个：中间 */
+.decor-item:nth-child(3){
+  width: 75px;
+  height: 75px;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-2deg);
+}
+/* 第4个：左下 */
+.decor-item:nth-child(4){
+  width: 60px;
+  height: 60px;
+  bottom: 15%;
+  left: 12%;
+  transform: rotate(8deg);
+}
+/* 第5个：右下 */
+.decor-item:nth-child(5){
+  width: 68px;
+  height: 68px;
+  bottom: 10%;
+  right: 15%;
+  transform: rotate(-4deg);
+}
+/* hover动效 */
+.decor-item:hover{
+  transform: rotate(0deg) scale(1.15);
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  z-index:10;
+}
+
+/* 手机端装饰区适配 */
+@media (max-width:768px){
+  .grid-card{min-height:350px;}
+  .bgm-control{bottom:10px;right:10px;}
+  .welcome-title{letter-spacing:4px;}
+  .photo-show{min-height:220px;}
+  /* 手机端装饰图片再缩小 */
+  .decor-item:nth-child(1){width:55px;height:55px;}
+  .decor-item:nth-child(2){width:50px;height:50px;}
+  .decor-item:nth-child(3){width:60px;height:60px;}
+  .decor-item:nth-child(4){width:45px;height:45px;}
+  .decor-item:nth-child(5){width:52px;height:52px;}
+}
+
+/* 留言区卡片 */
+.words-card{
+  background:#faf6f6;
+  border:1px solid #f8e1e3;
+  display:flex;
+  flex-direction:column;
+}
+.words-title{
+  color:#e63946;
+  text-align:center;
+  margin-bottom:12px;
+  font-size:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+#wordsInput{
+  flex:1;
+  width:100%;
+  padding:9px;
+  border:1px solid #ddd;
+  border-radius:8px;
+  resize:none;
+  font-size:13px;
+  margin-bottom:8px;
+}
+.words-btn-group{display:flex;gap:8px}
+.btn-save-words,.btn-clear{
+  flex:1;
+  padding:9px;
+  border:none;
+  border-radius:8px;
+  font-size:13px;
+  cursor:pointer;
+}
+.btn-save-words{background:#e63946;color:#fff}
+.btn-clear{background:#ddd;color:#333}
+.words-list{
+  margin-top:8px;
+  flex:1;
+  overflow-y:auto;
+}
+.words-item{
+  padding:8px;
+  border-radius:6px;
+  background:#fff0f3;
+  margin-bottom:4px;
+  font-size:12px;
+  color:#555;
+}
+
+/* BGM播放器 */
+.bgm-control{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:rgba(255,255,255,.95);
+  padding:12px 14px;
+  border-radius:12px;
+  box-shadow:0 3px 10px rgba(0,0,0,.12);
+  z-index:999;
+  min-width:200px;
+  text-align:center;
+}
+#bgmTitle{
+  font-size:13px;
+  color:#e63946;
+  margin-bottom:6px;
+  font-weight:bold;
+}
+.bgm-btn{
+  background:#e63946;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  padding:6px 8px;
+  margin:0 3px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+/* 手机端装饰区适配 */
+@media (max-width:768px){
+  .grid-card{min-height:350px;}
+  .bgm-control{bottom:10px;right:10px;}
+  .welcome-title{letter-spacing:4px;}
+  .photo-show{min-height:220px;}
+  /* 手机端装饰图片略缩小，保持散列 */
+  .decor-item:nth-child(1){width:80px;height:80px;}
+  .decor-item:nth-child(2){width:70px;height:70px;}
+  .decor-item:nth-child(3){width:60px;height:60px;}
+}
+</style>
+</head>
+<body>
+
+<!-- 欢迎页 -->
+<div class="welcome-page" id="welcomePage">
+  <div class="decoration star" style="top:20%;left:10%;animation-delay:0s">⭐</div>
+  <div class="decoration heart" style="top:15%;right:15%;animation-delay:0.5s">❤️</div>
+  <div class="decoration star" style="bottom:25%;left:20%;animation-delay:1s">✨</div>
+  <div class="decoration heart" style="bottom:30%;right:25%;animation-delay:1.5s">💓</div>
+  
+  <h1 class="welcome-title">欢迎进入小郭和小朱的世界</h1>
+  <button class="enter-btn" onclick="enterMainPage()">点击进入</button>
+</div>
+
+<!-- 主页面 -->
+<div class="main-page" id="mainPage">
+  <div class="page-grid">
+    <!-- 上排左：纪念日 -->
+    <div class="grid-card date-card">
+      <h3 class="title">❤️ 我们的纪念日 ❤️</h3>
+      <div class="input-item"><label for="loveDate">相恋日期</label><input type="date" id="loveDate"></div>
+      <div class="input-item"><label for="licenseDate">领证日期</label><input type="date" id="licenseDate"></div>
+      <div class="input-item"><label for="marryDate">结婚日期</label><input type="date" id="marryDate"></div>
+      <button class="btn-save" onclick="saveDates()">保存纪念日</button>
+      <div class="date-display" id="dateDisplay"></div>
+      <div class="countdown" id="countdownCard" style="display:none">
+        <h4>距离下一个结婚纪念日</h4>
+        <div class="countdown-text" id="countdownText"></div>
+      </div>
+    </div>
+
+    <!-- 上排右：照片区 -->
+    <div class="grid-card photo-card">
+      <h3 class="photo-title">📸 我们的瞬间 📸</h3>
+      <div class="photo-show" id="photoShow"></div>
+    </div>
+
+    <!-- 下排左：装饰区（散列布局） -->
+    <div class="grid-card decor-card">
+      <h3 class="decor-title">✨  ✨</h3>
+      <div class="decor-area">
+        <img src="icon/1.png" class="decor-item" alt="装饰1">
+        <img src="icon/2.png" class="decor-item" alt="装饰2">
+        <img src="icon/3.png" class="decor-item" alt="装饰3">
+        <img src="icon/4.png" class="decor-item" alt="装饰4">
+        <img src="icon/5.png" class="decor-item" alt="装饰5">
+      </div>
+    </div>
+
+    <!-- 下排右：甜蜜语录 -->
+    <div class="grid-card words-card">
+      <h3 class="words-title">💬 甜蜜语录 💬</h3>
+      <textarea id="wordsInput" placeholder="写下想对TA说的话"></textarea>
+      <div class="words-btn-group">
+        <button class="btn-save-words" onclick="saveWords()">保存语录</button>
+        <button class="btn-clear" onclick="clearWords()">清空</button>
+      </div>
+      <div class="words-list" id="wordsList"></div>
+    </div>
+  </div>
+
+  <!-- BGM播放器 -->
+  <div class="bgm-control">
+    <div id="bgmTitle">🎵 正在加载...</div>
+    <div>
+      <button class="bgm-btn" onclick="playBGM()">播放</button>
+      <button class="bgm-btn" onclick="pauseBGM()">暂停</button>
+      <button class="bgm-btn" onclick="nextBGM()">下一首</button>
+    </div>
+  </div>
+</div>
+
+<audio id="bgmPlayer" onended="nextBGM()">
+
+<script>
+// ===================== 配置区（只改这里）=====================
+const photoList = [
+  "photos/1.jpg",
+  "photos/2.jpg",
+  "photos/3.jpg",
+  "photos/4.jpg",
+  "photos/5.jpg",
+  "photos/6.jpg",
+  "photos/7.jpg",
+  "photos/8.jpg",
+  "photos/9.jpg",
+  "photos/10.jpg",
+  "photos/11.jpg",
+  "photos/12.jpg",
+  "photos/13.jpg",
+  "photos/14.jpg",
+  "photos/15.jpg",
+  "photos/16.jpg"
+];
+
+const bgmList = [
+  "music/天外来物.mp3",
+  "music/像晴天像雨天.mp3",
+  "music/一笑倾城.mp3"
+];
+// ===========================================================
+
+let currentBgmIndex = 0;
+const bgmPlayer = document.getElementById("bgmPlayer");
+
+function enterMainPage() {
+  document.getElementById("welcomePage").style.display = "none";
+  document.getElementById("mainPage").style.display = "block";
+  
+  loadPhotosTwoAtOnce();
+  loadSavedDates();
+  loadSavedWords();
+  
+  randomFirstSong();
+  showCurrentSongName();
+  playBGM();
+}
+
+function randomFirstSong() {
+  currentBgmIndex = Math.floor(Math.random() * bgmList.length);
+}
+
+function showCurrentSongName() {
+  const path = bgmList[currentBgmIndex];
+  const name = path.split("/").pop().replace(".mp3", "");
+  document.getElementById("bgmTitle").textContent = `🎵 ${name}`;
+}
+
+function playBGM() {
+  bgmPlayer.src = bgmList[currentBgmIndex];
+  bgmPlayer.play().catch(err => {});
+  showCurrentSongName();
+}
+
+function pauseBGM() {
+  bgmPlayer.pause();
+}
+
+function nextBGM() {
+  currentBgmIndex = (currentBgmIndex + 1) % bgmList.length;
+  playBGM();
+}
+
+let photoSlideIndex = 0;
+let slides = [];
+function loadPhotosTwoAtOnce() {
+  const photoShow = document.getElementById("photoShow");
+  photoShow.innerHTML = "";
+  slides = [];
+
+  for (let i=0; i<photoList.length; i+=2) {
+    const slide = document.createElement("div");
+    slide.className = "photo-slide";
+    
+    let html = "";
+    html += `<div class="photo-item"><img src="${photoList[i]}" onerror="this.parentElement.innerHTML='<div style=color:#999;>加载失败</div>'"></div>`;
+    if (i+1 < photoList.length) {
+      html += `<div class="photo-item"><img src="${photoList[i+1]}" onerror="this.parentElement.innerHTML='<div style=color:#999;>加载失败</div>'"></div>`;
+    } else {
+      html += `<div class="photo-item"></div>`;
+    }
+    slide.innerHTML = html;
+    photoShow.appendChild(slide);
+    slides.push(slide);
+  }
+
+  if (slides.length === 0) return;
+  slides[0].classList.add("active");
+  setInterval(() => {
+    slides[photoSlideIndex].classList.remove("active");
+    photoSlideIndex = (photoSlideIndex + 1) % slides.length;
+    slides[photoSlideIndex].classList.add("active");
+  }, 4000);
+}
+
+function saveDates() {
+  const loveDate = document.getElementById("loveDate").value;
+  const licenseDate = document.getElementById("licenseDate").value;
+  const marryDate = document.getElementById("marryDate").value;
+  
+  if(loveDate) localStorage.setItem("loveDate", loveDate);
+  if(licenseDate) localStorage.setItem("licenseDate", licenseDate);
+  if(marryDate) localStorage.setItem("marryDate", marryDate);
+  
+  loadSavedDates();
+  alert("纪念日保存成功❤️");
+}
+
+function loadSavedDates() {
+  const loveDate = localStorage.getItem("loveDate");
+  const licenseDate = localStorage.getItem("licenseDate");
+  const marryDate = localStorage.getItem("marryDate");
+  
+  if(loveDate) document.getElementById("loveDate").value = loveDate;
+  if(licenseDate) document.getElementById("licenseDate").value = licenseDate;
+  if(marryDate) document.getElementById("marryDate").value = marryDate;
+  
+  function calcDays(dateStr) {
+    if(!dateStr) return 0;
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  }
+  
+  let html = "";
+  if(loveDate) html += `<div class="date-card-item"><h4>相恋</h4><p>${loveDate}</p><p>已共度${calcDays(loveDate)}天</p></div>`;
+  if(licenseDate) html += `<div class="date-card-item"><h4>领证</h4><p>${licenseDate}</p><p>已共度${calcDays(licenseDate)}天</p></div>`;
+  if(marryDate) html += `<div class="date-card-item"><h4>结婚</h4><p>${marryDate}</p><p>已共度${calcDays(marryDate)}天</p></div>`;
+  document.getElementById("dateDisplay").innerHTML = html;
+  
+  if(licenseDate) {
+    document.getElementById("countdownCard").style.display = "block";
+    setInterval(() => {
+      const now = new Date();
+      const [year, month, day] = licenseDate.split("-").map(Number);
+      let nextAnni = new Date(now.getFullYear(), month - 1, day);
+      if(nextAnni < now) nextAnni = new Date(now.getFullYear() + 1, month - 1, day);
+      
+      const diff = nextAnni - now;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      document.getElementById("countdownText").textContent = `${days}天 ${hours}时 ${mins}分 ${secs}秒`;
+    }, 1000);
+  }
+}
+
+function saveWords() {
+  const text = document.getElementById("wordsInput").value.trim();
+  if(!text) {
+    alert("请输入想对TA说的话💖");
+    return;
+  }
+  
+  let wordsList = JSON.parse(localStorage.getItem("sweetWords") || "[]");
+  wordsList.unshift({
+    text: text,
+    time: new Date().toLocaleString()
+  });
+  localStorage.setItem("sweetWords", JSON.stringify(wordsList));
+  
+  document.getElementById("wordsInput").value = "";
+  loadSavedWords();
+}
+
+function loadSavedWords() {
+  const wordsList = JSON.parse(localStorage.getItem("sweetWords") || "[]");
+  let html = "";
+  
+  if(wordsList.length === 0) {
+    html = '<p style="text-align:center;color:#999;margin-top:20px;">暂无甜蜜语录~</p>';
+  } else {
+    wordsList.forEach(item => {
+      html += `<div class="words-item"><p>${item.text}</p><p style="font-size:10px;color:#999;margin-top:5px;">${item.time}</p></div>`;
+    });
+  }
+  
+  document.getElementById("wordsList").innerHTML = html;
+}
+
+function clearWords() {
+  if(confirm("确定要清空所有甜蜜语录吗？")) {
+    localStorage.removeItem("sweetWords");
+    loadSavedWords();
+  }
+}
+</script>
+</body>
+</html>
