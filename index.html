@@ -59,7 +59,7 @@ body{overflow-x:hidden;background:#fdfbfb;}
   100% {transform: translateY(0);}
 }
 
-/* 主页面 - 电脑端 2+2 排版 */
+/* 主页面 - 电脑端 2+2 排版：核心调整行高 */
 .main-page{
   display:none;
   min-height:100vh;
@@ -70,7 +70,7 @@ body{overflow-x:hidden;background:#fdfbfb;}
   .page-grid{
     display:grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 420px 420px;
+    grid-template-rows: 500px 300px; /* 纪念日行拉高，装饰区行压缩一半 */
     gap:20px;
     max-width:1200px;
     margin:0 auto;
@@ -96,12 +96,13 @@ body{overflow-x:hidden;background:#fdfbfb;}
   min-height:380px;
 }
 
-/* 纪念日卡片 */
+/* 纪念日卡片 - 拉长高度，保证内容完整 */
 .date-card{
   background:#faf6f6;
   border:1px solid #f8e1e3;
   display:flex;
   flex-direction:column;
+  min-height:500px; /* 电脑端拉长到500px */
 }
 .title{
   color:#e63946;
@@ -143,6 +144,8 @@ input{
   margin-top:12px;
   flex:1;
   overflow-y:auto;
+  max-height:280px; /* 增加最大高度，显示更多内容 */
+  padding-right:4px;
 }
 .date-card-item{
   padding:9px;
@@ -158,6 +161,7 @@ input{
 .date-card-item p{
   font-size:12px;
   color:#555;
+  line-height:1.5;
 }
 .countdown{
   padding:9px;
@@ -165,6 +169,7 @@ input{
   background:#ffccd5;
   margin-top:8px;
   text-align:center;
+  margin-bottom:10px;
 }
 .countdown h4{
   color:#d62828;
@@ -225,14 +230,15 @@ input{
   border-radius:6px;
 }
 
-/* 装饰区卡片 - 适配5个装饰的散列布局 */
+/* 装饰区卡片 - 压缩高度到原来一半，内容排版不变 */
 .decor-card{
   background:#fff9f9;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  padding:20px 10px;
+  padding:15px 10px;
+  min-height:300px; /* 电脑端压缩到300px */
 }
 .decor-title{
   color:#e63946;
@@ -249,9 +255,9 @@ input{
   width:100%;
   height:100%;
   position:relative;
-  max-width:500px;
+  max-width:400px; /* 容器宽度略缩小，适配高度 */
 }
-/* 装饰图片 - 缩小尺寸+5个散列分布 */
+/* 装饰图片 - 大小和位置保持不变 */
 .decor-item{
   position:absolute;
   object-fit:contain;
@@ -304,20 +310,6 @@ input{
   transform: rotate(0deg) scale(1.15);
   box-shadow:0 4px 12px rgba(0,0,0,0.15);
   z-index:10;
-}
-
-/* 手机端装饰区适配 */
-@media (max-width:768px){
-  .grid-card{min-height:350px;}
-  .bgm-control{bottom:10px;right:10px;}
-  .welcome-title{letter-spacing:4px;}
-  .photo-show{min-height:220px;}
-  /* 手机端装饰图片再缩小 */
-  .decor-item:nth-child(1){width:55px;height:55px;}
-  .decor-item:nth-child(2){width:50px;height:50px;}
-  .decor-item:nth-child(3){width:60px;height:60px;}
-  .decor-item:nth-child(4){width:45px;height:45px;}
-  .decor-item:nth-child(5){width:52px;height:52px;}
 }
 
 /* 留言区卡片 */
@@ -402,16 +394,21 @@ input{
   font-size:12px;
 }
 
-/* 手机端装饰区适配 */
+/* 手机端适配：保持比例 */
 @media (max-width:768px){
   .grid-card{min-height:350px;}
+  .date-card{min-height:450px;} /* 手机端纪念日也拉长 */
+  .date-display{max-height:220px;}
+  .decor-card{min-height:200px;} /* 手机端装饰区也压缩 */
   .bgm-control{bottom:10px;right:10px;}
   .welcome-title{letter-spacing:4px;}
   .photo-show{min-height:220px;}
-  /* 手机端装饰图片略缩小，保持散列 */
-  .decor-item:nth-child(1){width:80px;height:80px;}
-  .decor-item:nth-child(2){width:70px;height:70px;}
+  /* 手机端装饰图片大小不变 */
+  .decor-item:nth-child(1){width:55px;height:55px;}
+  .decor-item:nth-child(2){width:50px;height:50px;}
   .decor-item:nth-child(3){width:60px;height:60px;}
+  .decor-item:nth-child(4){width:45px;height:45px;}
+  .decor-item:nth-child(5){width:52px;height:52px;}
 }
 </style>
 </head>
@@ -431,7 +428,7 @@ input{
 <!-- 主页面 -->
 <div class="main-page" id="mainPage">
   <div class="page-grid">
-    <!-- 上排左：纪念日 -->
+    <!-- 上排左：纪念日（拉长） -->
     <div class="grid-card date-card">
       <h3 class="title">❤️ 我们的纪念日 ❤️</h3>
       <div class="input-item"><label for="loveDate">相恋日期</label><input type="date" id="loveDate"></div>
@@ -451,9 +448,9 @@ input{
       <div class="photo-show" id="photoShow"></div>
     </div>
 
-    <!-- 下排左：装饰区（散列布局） -->
+    <!-- 下排左：装饰区（压缩高度） -->
     <div class="grid-card decor-card">
-      <h3 class="decor-title">✨  ✨</h3>
+      <h3 class="decor-title">✨ 甜蜜装饰 ✨</h3>
       <div class="decor-area">
         <img src="icon/1.png" class="decor-item" alt="装饰1">
         <img src="icon/2.png" class="decor-item" alt="装饰2">
@@ -518,13 +515,15 @@ const bgmList = [
 
 let currentBgmIndex = 0;
 const bgmPlayer = document.getElementById("bgmPlayer");
+// 全局倒计时定时器，避免重复创建
+let countdownTimer = null;
 
 function enterMainPage() {
   document.getElementById("welcomePage").style.display = "none";
   document.getElementById("mainPage").style.display = "block";
   
   loadPhotosTwoAtOnce();
-  loadSavedDates();
+  loadSavedDates(); // 页面打开就加载保存的纪念日
   loadSavedWords();
   
   randomFirstSong();
@@ -544,7 +543,10 @@ function showCurrentSongName() {
 
 function playBGM() {
   bgmPlayer.src = bgmList[currentBgmIndex];
-  bgmPlayer.play().catch(err => {});
+  bgmPlayer.play().catch(err => {
+    console.log("播放失败：", err);
+    alert("BGM播放失败，请检查文件路径是否正确～");
+  });
   showCurrentSongName();
 }
 
@@ -594,15 +596,17 @@ function saveDates() {
   const licenseDate = document.getElementById("licenseDate").value;
   const marryDate = document.getElementById("marryDate").value;
   
+  // 保存到本地存储，永久生效
   if(loveDate) localStorage.setItem("loveDate", loveDate);
   if(licenseDate) localStorage.setItem("licenseDate", licenseDate);
   if(marryDate) localStorage.setItem("marryDate", marryDate);
   
   loadSavedDates();
-  alert("纪念日保存成功❤️");
+  alert("纪念日保存成功❤️，下次打开不用再输入啦～");
 }
 
 function loadSavedDates() {
+  // 读取本地存储的日期，自动回填到输入框
   const loveDate = localStorage.getItem("loveDate");
   const licenseDate = localStorage.getItem("licenseDate");
   const marryDate = localStorage.getItem("marryDate");
@@ -611,6 +615,7 @@ function loadSavedDates() {
   if(licenseDate) document.getElementById("licenseDate").value = licenseDate;
   if(marryDate) document.getElementById("marryDate").value = marryDate;
   
+  // 计算已共度天数
   function calcDays(dateStr) {
     if(!dateStr) return 0;
     const date = new Date(dateStr);
@@ -619,17 +624,24 @@ function loadSavedDates() {
     return Math.floor(diffTime / (1000 * 60 * 60 * 24));
   }
   
+  // 渲染纪念日列表
   let html = "";
   if(loveDate) html += `<div class="date-card-item"><h4>相恋</h4><p>${loveDate}</p><p>已共度${calcDays(loveDate)}天</p></div>`;
   if(licenseDate) html += `<div class="date-card-item"><h4>领证</h4><p>${licenseDate}</p><p>已共度${calcDays(licenseDate)}天</p></div>`;
   if(marryDate) html += `<div class="date-card-item"><h4>结婚</h4><p>${marryDate}</p><p>已共度${calcDays(marryDate)}天</p></div>`;
   document.getElementById("dateDisplay").innerHTML = html;
   
-  if(licenseDate) {
+  // 清除旧的倒计时定时器，避免重复
+  if(countdownTimer) clearInterval(countdownTimer);
+  
+  // 显示结婚纪念日倒计时（优先用结婚日期，没有则用领证日期）
+  const targetDate = marryDate || licenseDate;
+  if(targetDate) {
     document.getElementById("countdownCard").style.display = "block";
-    setInterval(() => {
+    // 定义倒计时更新函数
+    function updateCountdown() {
       const now = new Date();
-      const [year, month, day] = licenseDate.split("-").map(Number);
+      const [year, month, day] = targetDate.split("-").map(Number);
       let nextAnni = new Date(now.getFullYear(), month - 1, day);
       if(nextAnni < now) nextAnni = new Date(now.getFullYear() + 1, month - 1, day);
       
@@ -640,7 +652,12 @@ function loadSavedDates() {
       const secs = Math.floor((diff % (1000 * 60)) / 1000);
       
       document.getElementById("countdownText").textContent = `${days}天 ${hours}时 ${mins}分 ${secs}秒`;
-    }, 1000);
+    }
+    // 立即更新一次，再设置定时器
+    updateCountdown();
+    countdownTimer = setInterval(updateCountdown, 1000);
+  } else {
+    document.getElementById("countdownCard").style.display = "none";
   }
 }
 
@@ -683,6 +700,12 @@ function clearWords() {
     loadSavedWords();
   }
 }
+
+// 页面加载完成后，预加载保存的纪念日（防止刷新后丢失）
+window.onload = function() {
+  loadSavedDates();
+  loadSavedWords();
+};
 </script>
 </body>
 </html>
