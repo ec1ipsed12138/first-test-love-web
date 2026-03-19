@@ -579,11 +579,14 @@ body{overflow-x:hidden;background:#fdfbfb;}
 </head>
 <body>
 
-<!-- Firebase 核心配置（同步加载，无模块问题） -->
-<script src="https://cdn.jsdelivr.net/npm/firebase@12.10.0/dist/firebase-app.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/firebase@12.10.0/dist/firebase-firestore.min.js"></script>
-<script>
-  // Firebase 配置信息（和你的项目完全匹配）
+<!-- Firebase 配置和初始化 -->
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, query } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+  // Your web app's Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyDjfZMxHXyfyNDaKg_2zs9IMsZbA7qE21w",
     authDomain: "test-6f1e7.firebaseapp.com",
@@ -594,40 +597,22 @@ body{overflow-x:hidden;background:#fdfbfb;}
     measurementId: "G-YVE9E65GD1"
   };
 
-  // 初始化 Firebase（同步执行，确保全局可用）
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
-  // 封装 Firebase 方法（简化调用，避免拼写错误）
-  const firebaseService = {
-    // 添加留言
-    addWord: async (text) => {
-      return await db.collection("sweetWords").add({
-        text: text,
-        time: new Date().toLocaleString(),
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    },
-    // 获取所有留言（按时间降序）
-    getWords: async () => {
-      const snapshot = await db.collection("sweetWords")
-        .orderBy("timestamp", "desc")
-        .get();
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-    },
-    // 删除所有留言
-    clearWords: async () => {
-      const snapshot = await db.collection("sweetWords").get();
-      const deletePromises = snapshot.docs.map(doc => doc.ref.delete());
-      await Promise.all(deletePromises);
-    }
-  };
-
-  // 挂载到全局，方便调用
-  window.firebaseService = firebaseService;
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  
+  // Initialize Firestore
+  const db = getFirestore(app);
+  
+  // 暴露到全局作用域，让其他脚本可以访问
+  window.firebaseDb = db;
+  window.firebaseCollection = collection;
+  window.firebaseAddDoc = addDoc;
+  window.firebaseGetDocs = getDocs;
+  window.firebaseDeleteDoc = deleteDoc;
+  window.firebaseDoc = doc;
+  window.firebaseOrderBy = orderBy;
+  window.firebaseQuery = query;
 </script>
 
 <!-- 欢迎页 -->
@@ -648,6 +633,7 @@ body{overflow-x:hidden;background:#fdfbfb;}
     <!-- 上排左：纪念日（拉长） -->
     <div class="grid-card date-card">
       <h3 class="title">❤️ 我们的纪念日 ❤️</h3>
+      <!-- 输入框已隐藏，不再显示 -->
       <div class="date-display" id="dateDisplay"></div>
       <div class="countdown" id="countdownCard" style="display:none">
         <h4>距离下一个结婚纪念日</h4>
@@ -748,7 +734,10 @@ function createFloatingDecorations() {
     decor.style.animationDelay = `${Math.random() * 5}s`;
     document.body.appendChild(decor);
     
-    setTimeout(() => decor.remove(), 8000);
+    // 移除装饰
+    setTimeout(() => {
+      decor.remove();
+    }, 8000);
   }, 1500);
 }
 
@@ -763,6 +752,8 @@ function enterMainPage() {
   randomFirstSong();
   showCurrentSongName();
   playBGM();
+  
+  // 创建漂浮装饰
   createFloatingDecorations();
 }
 
@@ -805,7 +796,8 @@ function loadPhotosTwoAtOnce() {
     const slide = document.createElement("div");
     slide.className = "photo-slide";
     
-    let html = `<div class="photo-item"><img src="${photoList[i]}" onerror="this.parentElement.innerHTML='<div style=color:#999;>加载失败</div>'"></div>`;
+    let html = "";
+    html += `<div class="photo-item"><img src="${photoList[i]}" onerror="this.parentElement.innerHTML='<div style=color:#999;>加载失败</div>'"></div>`;
     if (i+1 < photoList.length) {
       html += `<div class="photo-item"><img src="${photoList[i+1]}" onerror="this.parentElement.innerHTML='<div style=color:#999;>加载失败</div>'"></div>`;
     } else {
@@ -816,18 +808,18 @@ function loadPhotosTwoAtOnce() {
     slides.push(slide);
   }
 
-  if (slides.length > 0) {
-    slides[0].classList.add("active");
-    setInterval(() => {
-      slides[photoSlideIndex].classList.remove("active");
-      photoSlideIndex = (photoSlideIndex + 1) % slides.length;
-      slides[photoSlideIndex].classList.add("active");
-    }, 4000);
-  }
+  if (slides.length === 0) return;
+  slides[0].classList.add("active");
+  setInterval(() => {
+    slides[photoSlideIndex].classList.remove("active");
+    photoSlideIndex = (photoSlideIndex + 1) % slides.length;
+    slides[photoSlideIndex].classList.add("active");
+  }, 4000);
 }
 
 // 加载固定的纪念日
 function loadFixedDates() {
+  // 计算已共度天数
   function calcDays(dateStr) {
     if(!dateStr) return 0;
     const date = new Date(dateStr);
@@ -836,17 +828,21 @@ function loadFixedDates() {
     return Math.floor(diffTime / (1000 * 60 * 60 * 24));
   }
   
+  // 渲染纪念日列表
   let html = "";
   if(LOVE_DATE) html += `<div class="date-card-item"><h4>相恋</h4><p>❤️ ${LOVE_DATE}</p><p>已共度${calcDays(LOVE_DATE)}天</p></div>`;
   if(LICENSE_DATE) html += `<div class="date-card-item"><h4>领证</h4><p>💍 ${LICENSE_DATE}</p><p>已共度${calcDays(LICENSE_DATE)}天</p></div>`;
   if(MARRY_DATE) html += `<div class="date-card-item"><h4>结婚</h4><p>🎊 ${MARRY_DATE}</p><p>已共度${calcDays(MARRY_DATE)}天</p></div>`;
   document.getElementById("dateDisplay").innerHTML = html;
   
+  // 清除旧的倒计时定时器
   if(countdownTimer) clearInterval(countdownTimer);
   
+  // 显示结婚纪念日倒计时
   const targetDate = MARRY_DATE || LICENSE_DATE;
   if(targetDate) {
     document.getElementById("countdownCard").style.display = "block";
+    // 定义倒计时更新函数
     function updateCountdown() {
       const now = new Date();
       const [year, month, day] = targetDate.split("-").map(Number);
@@ -861,6 +857,7 @@ function loadFixedDates() {
       
       document.getElementById("countdownText").textContent = `${days}天 ${hours}时 ${mins}分 ${secs}秒`;
     }
+    // 立即更新一次，再设置定时器
     updateCountdown();
     countdownTimer = setInterval(updateCountdown, 1000);
   } else {
@@ -868,7 +865,7 @@ function loadFixedDates() {
   }
 }
 
-// 保存留言到Firebase云端（简化调用，无拼写错误）
+// 保存留言到Firebase云端
 async function saveWords() {
   const text = document.getElementById("wordsInput").value.trim();
   if(!text) {
@@ -877,34 +874,49 @@ async function saveWords() {
   }
   
   try {
-    await window.firebaseService.addWord(text);
+    // 添加文档到Firebase Firestore
+    const docRef = await window.firebaseAddDoc(
+      window.firebaseCollection(window.firebaseDb, "sweetWords"), 
+      {
+        text: text,
+        time: new Date().toLocaleString(),
+        timestamp: new Date() // 添加时间戳用于排序
+      }
+    );
+    
+    console.log("留言已保存到云端，ID: ", docRef.id);
     document.getElementById("wordsInput").value = "";
-    loadSavedWords();
+    loadSavedWords(); // 重新加载留言列表
+    
+    // 提示保存成功
     alert("💖 甜蜜语录已保存到云端～");
   } catch (e) {
     console.error("保存留言失败: ", e);
-    // 本地存储备用
-    const localWords = JSON.parse(localStorage.getItem("sweetWords") || "[]");
-    localWords.unshift({text, time: new Date().toLocaleString()});
-    localStorage.setItem("sweetWords", JSON.stringify(localWords));
-    loadSavedWords();
-    alert("云端保存失败，已保存到本地～");
+    alert("保存失败，请稍后再试～");
   }
 }
 
-// 从Firebase云端加载留言（简化调用）
+// 从Firebase云端加载留言
 async function loadSavedWords() {
   try {
-    const words = await window.firebaseService.getWords();
+    // 创建查询，按时间戳降序排列
+    const q = window.firebaseQuery(
+      window.firebaseCollection(window.firebaseDb, "sweetWords"),
+      window.firebaseOrderBy("timestamp", "desc")
+    );
+    
+    // 获取所有留言
+    const querySnapshot = await window.firebaseGetDocs(q);
     let html = "";
     
-    if (words.length === 0) {
+    if (querySnapshot.empty) {
       html = '<p style="text-align:center;color:#999;margin-top:20px;">暂无甜蜜语录~💖</p>';
     } else {
-      words.forEach(item => {
-        html += `<div class="words-item" data-id="${item.id}">
-                  <p>${item.text}</p>
-                  <p style="font-size:10px;color:#999;margin-top:5px;">${item.time || new Date(item.timestamp?.toDate()).toLocaleString()}</p>
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        html += `<div class="words-item" data-id="${doc.id}">
+                  <p>${data.text}</p>
+                  <p style="font-size:10px;color:#999;margin-top:5px;">${data.time}</p>
                 </div>`;
       });
     }
@@ -912,7 +924,7 @@ async function loadSavedWords() {
     document.getElementById("wordsList").innerHTML = html;
   } catch (e) {
     console.error("加载留言失败: ", e);
-    // 本地存储备用
+    // 如果云端加载失败，尝试使用本地存储作为备用
     const localWords = JSON.parse(localStorage.getItem("sweetWords") || "[]");
     let html = "";
     
@@ -925,31 +937,54 @@ async function loadSavedWords() {
     }
     
     document.getElementById("wordsList").innerHTML = html;
+    alert("暂时无法连接云端，已加载本地留言～");
   }
 }
 
-// 清空云端留言（简化调用）
+// 清空云端留言
 async function clearWords() {
-  if(!confirm("确定要清空所有甜蜜语录吗？💔")) return;
+  if(!confirm("确定要清空所有甜蜜语录吗？💔")) {
+    return;
+  }
   
   try {
-    await window.firebaseService.clearWords();
+    // 获取所有留言文档
+    const q = window.firebaseQuery(
+      window.firebaseCollection(window.firebaseDb, "sweetWords")
+    );
+    const querySnapshot = await window.firebaseGetDocs(q);
+    
+    // 批量删除所有文档
+    const deletePromises = [];
+    querySnapshot.forEach((doc) => {
+      deletePromises.push(
+        window.firebaseDeleteDoc(window.firebaseDoc(window.firebaseDb, "sweetWords", doc.id))
+      );
+    });
+    
+    await Promise.all(deletePromises);
+    console.log("所有留言已从云端删除");
+    
+    // 同时清空本地存储
     localStorage.removeItem("sweetWords");
+    
+    // 重新加载留言列表
     loadSavedWords();
     alert("💔 所有甜蜜语录已清空～");
   } catch (e) {
     console.error("清空留言失败: ", e);
-    localStorage.removeItem("sweetWords");
-    loadSavedWords();
-    alert("云端清空失败，已清空本地留言～");
+    alert("清空失败，请稍后再试～");
   }
 }
 
 // 页面加载完成后初始化
 window.onload = function() {
   loadFixedDates();
-  // 确保Firebase初始化完成后加载留言
-  setTimeout(loadSavedWords, 500);
+  
+  // 等待Firebase加载完成后再加载留言
+  setTimeout(() => {
+    loadSavedWords();
+  }, 1000);
 };
 </script>
 </body>
