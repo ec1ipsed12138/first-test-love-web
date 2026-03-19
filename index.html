@@ -579,6 +579,42 @@ body{overflow-x:hidden;background:#fdfbfb;}
 </head>
 <body>
 
+<!-- Firebase 配置和初始化 -->
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, query } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDjfZMxHXyfyNDaKg_2zs9IMsZbA7qE21w",
+    authDomain: "test-6f1e7.firebaseapp.com",
+    projectId: "test-6f1e7",
+    storageBucket: "test-6f1e7.firebasestorage.app",
+    messagingSenderId: "210688408500",
+    appId: "1:210688408500:web:760e0d79b8b49af4bb50e1",
+    measurementId: "G-YVE9E65GD1"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  
+  // Initialize Firestore
+  const db = getFirestore(app);
+  
+  // 暴露到全局作用域，让其他脚本可以访问
+  window.firebaseDb = db;
+  window.firebaseCollection = collection;
+  window.firebaseAddDoc = addDoc;
+  window.firebaseGetDocs = getDocs;
+  window.firebaseDeleteDoc = deleteDoc;
+  window.firebaseDoc = doc;
+  window.firebaseOrderBy = orderBy;
+  window.firebaseQuery = query;
+</script>
+
 <!-- 欢迎页 -->
 <div class="welcome-page" id="welcomePage">
   <div class="decoration star" style="top:20%;left:10%;animation-delay:0s">⭐</div>
@@ -711,7 +747,7 @@ function enterMainPage() {
   
   loadPhotosTwoAtOnce();
   loadFixedDates();
-  loadSavedWords();
+  loadSavedWords(); // 加载云端留言
   
   randomFirstSong();
   showCurrentSongName();
@@ -829,50 +865,126 @@ function loadFixedDates() {
   }
 }
 
-function saveWords() {
+// 保存留言到Firebase云端
+async function saveWords() {
   const text = document.getElementById("wordsInput").value.trim();
   if(!text) {
     alert("请输入想对TA说的话💖");
     return;
   }
   
-  let wordsList = JSON.parse(localStorage.getItem("sweetWords") || "[]");
-  wordsList.unshift({
-    text: text,
-    time: new Date().toLocaleString()
-  });
-  localStorage.setItem("sweetWords", JSON.stringify(wordsList));
-  
-  document.getElementById("wordsInput").value = "";
-  loadSavedWords();
+  try {
+    // 添加文档到Firebase Firestore
+    const docRef = await window.firebaseAddDoc(
+      window.firebaseCollection(window.firebaseDb, "sweetWords"), 
+      {
+        text: text,
+        time: new Date().toLocaleString(),
+        timestamp: new Date() // 添加时间戳用于排序
+      }
+    );
+    
+    console.log("留言已保存到云端，ID: ", docRef.id);
+    document.getElementById("wordsInput").value = "";
+    loadSavedWords(); // 重新加载留言列表
+    
+    // 提示保存成功
+    alert("💖 甜蜜语录已保存到云端～");
+  } catch (e) {
+    console.error("保存留言失败: ", e);
+    alert("保存失败，请稍后再试～");
+  }
 }
 
-function loadSavedWords() {
-  const wordsList = JSON.parse(localStorage.getItem("sweetWords") || "[]");
-  let html = "";
+// 从Firebase云端加载留言
+async function loadSavedWords() {
+  try {
+    // 创建查询，按时间戳降序排列
+    const q = window.firebaseQuery(
+      window.firebaseCollection(window.firebaseDb, "sweetWords"),
+      window.firebaseOrderBy("timestamp", "desc")
+    );
+    
+    // 获取所有留言
+    const querySnapshot = await window.firebaseGetDocs(q);
+    let html = "";
+    
+    if (querySnapshot.empty) {
+      html = '<p style="text-align:center;color:#999;margin-top:20px;">暂无甜蜜语录~💖</p>';
+    } else {
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        html += `<div class="words-item" data-id="${doc.id}">
+                  <p>${data.text}</p>
+                  <p style="font-size:10px;color:#999;margin-top:5px;">${data.time}</p>
+                </div>`;
+      });
+    }
+    
+    document.getElementById("wordsList").innerHTML = html;
+  } catch (e) {
+    console.error("加载留言失败: ", e);
+    // 如果云端加载失败，尝试使用本地存储作为备用
+    const localWords = JSON.parse(localStorage.getItem("sweetWords") || "[]");
+    let html = "";
+    
+    if (localWords.length === 0) {
+      html = '<p style="text-align:center;color:#999;margin-top:20px;">暂无甜蜜语录~💖</p>';
+    } else {
+      localWords.forEach(item => {
+        html += `<div class="words-item"><p>${item.text}</p><p style="font-size:10px;color:#999;margin-top:5px;">${item.time}</p></div>`;
+      });
+    }
+    
+    document.getElementById("wordsList").innerHTML = html;
+    alert("暂时无法连接云端，已加载本地留言～");
+  }
+}
+
+// 清空云端留言
+async function clearWords() {
+  if(!confirm("确定要清空所有甜蜜语录吗？💔")) {
+    return;
+  }
   
-  if(wordsList.length === 0) {
-    html = '<p style="text-align:center;color:#999;margin-top:20px;">暂无甜蜜语录~💖</p>';
-  } else {
-    wordsList.forEach(item => {
-      html += `<div class="words-item"><p>${item.text}</p><p style="font-size:10px;color:#999;margin-top:5px;">${item.time}</p></div>`;
+  try {
+    // 获取所有留言文档
+    const q = window.firebaseQuery(
+      window.firebaseCollection(window.firebaseDb, "sweetWords")
+    );
+    const querySnapshot = await window.firebaseGetDocs(q);
+    
+    // 批量删除所有文档
+    const deletePromises = [];
+    querySnapshot.forEach((doc) => {
+      deletePromises.push(
+        window.firebaseDeleteDoc(window.firebaseDoc(window.firebaseDb, "sweetWords", doc.id))
+      );
     });
-  }
-  
-  document.getElementById("wordsList").innerHTML = html;
-}
-
-function clearWords() {
-  if(confirm("确定要清空所有甜蜜语录吗？💔")) {
+    
+    await Promise.all(deletePromises);
+    console.log("所有留言已从云端删除");
+    
+    // 同时清空本地存储
     localStorage.removeItem("sweetWords");
+    
+    // 重新加载留言列表
     loadSavedWords();
+    alert("💔 所有甜蜜语录已清空～");
+  } catch (e) {
+    console.error("清空留言失败: ", e);
+    alert("清空失败，请稍后再试～");
   }
 }
 
-// 页面加载完成后，加载固定纪念日
+// 页面加载完成后初始化
 window.onload = function() {
   loadFixedDates();
-  loadSavedWords();
+  
+  // 等待Firebase加载完成后再加载留言
+  setTimeout(() => {
+    loadSavedWords();
+  }, 1000);
 };
 </script>
 </body>
